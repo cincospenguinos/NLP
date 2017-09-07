@@ -13,6 +13,8 @@ public class NGram implements Comparable {
     private String[] words;
 
     public NGram(String[] _words) {
+        for(int i = 0; i < _words.length; i++)
+            _words[i] = _words[i].toLowerCase();
         words = _words;
     }
 
@@ -28,7 +30,7 @@ public class NGram implements Comparable {
                 return false;
 
             for(int i = 0; i < this.size(); i++)
-                if (!this.words[i].equalsIgnoreCase(g.words[i]))
+                if (!this.words[i].equals(g.words[i]))
                     return false;
 
             return true;

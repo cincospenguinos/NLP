@@ -85,6 +85,16 @@ public class NGramModel {
     }
 
     /**
+     * Returns the true probability of the log probability provided. For debugging purposes.
+     *
+     * @param logProb - the logarithm probability
+     * @return the true probability
+     */
+    public double trueProbability(double logProb){
+        return Math.pow(2, logProb);
+    }
+
+    /**
      * Helper method. Returns the log base 2 of the number provided.
      *
      * @param number - the number to get the log of

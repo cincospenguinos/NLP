@@ -10,7 +10,7 @@ public class Main {
 
         NGramModel unigramModel = new NGramModel(1, false);
         unigramModel.addAll(NGram.getNGramsFromSentence(sentence, 1));
-        System.out.println("Probability of is: " + unigramModel.probabilityOfSentence("is"));
+        System.out.println("Probability of This: " + unigramModel.trueProbability(unigramModel.probabilityOfSentence("this")));
     }
 
     private static boolean acceptableArgs(String[] args){
