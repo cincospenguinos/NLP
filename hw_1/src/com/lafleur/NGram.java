@@ -41,10 +41,15 @@ public class NGram {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
 
-        for(String w : words){
-            builder.append("\"" + w + "\"");
+        for (int i = 0; i < words.length - 1; i++) {
+            String w = words[i];
+            if (w.equals(PHI))
+                builder.append("PHI, ");
+            else
+                builder.append("\"" + w + "\", ");
         }
 
+        builder.append("\"" + words[words.length - 1] + "\"");
         builder.append("]");
 
         return builder.toString();
@@ -75,9 +80,9 @@ public class NGram {
                 String[] gram = new String[n];
 
                 for (int j = 0; j < n; j++) {
-                    int wordIndex = i - 1;
+                    int wordIndex = i + j - (n - 1);
 
-                    if (wordIndex == -1){
+                    if (wordIndex < 0){
                         gram[j] = PHI;
                         continue;
                     }
