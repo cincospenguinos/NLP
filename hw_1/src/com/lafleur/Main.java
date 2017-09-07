@@ -6,11 +6,18 @@ public class Main {
 
     public static void main (String[] args){
 //        if (!acceptableArgs(args)) System.exit(1); // TODO: Uncomment this when you're ready to turn it in
-        String sentence = "This is a sentence";
+        String[] sentences = {"This is a sentence", "This is another sentence", "And yet another sentence", "But that is all we have"};
 
         NGramModel unigramModel = new NGramModel(1, false);
-        unigramModel.addAll(NGram.getNGramsFromSentence(sentence, 1));
-        System.out.println("Probability of This: " + unigramModel.trueProbability(unigramModel.probabilityOfSentence("this")));
+        NGramModel bigramModel = new NGramModel(2, false);
+
+        for (String s : sentences) {
+            unigramModel.addAll(NGram.getNGramsFromSentence(s, unigramModel.getValueOfN()));
+            bigramModel.addAll(NGram.getNGramsFromSentence(s, bigramModel.getValueOfN()));
+        }
+
+        System.out.println(unigramModel.trueProb(unigramModel.probabilityOfSentence("This is a third")));
+        System.out.println(bigramModel.trueProb(bigramModel.probabilityOfSentence("This is sparta")));
     }
 
     private static boolean acceptableArgs(String[] args){

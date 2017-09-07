@@ -18,6 +18,24 @@ public class NGram implements Comparable {
         words = _words;
     }
 
+    /**
+     * Returns true if word is the nth word in this NGram.
+     *
+     * @param word - Word to check
+     * @param n - which position in the NGram
+     * @return true if word is the nth word in the NGram
+     */
+    public boolean isNthWord(String word, int n){
+        if (n > size() || n <= 0)
+            return false;
+
+        return words[n - 1].equalsIgnoreCase(word);
+    }
+
+    public String getNthWord(int n){
+        return words[n - 1];
+    }
+
     public int size() {
         return words.length;
     }
@@ -104,17 +122,16 @@ public class NGram implements Comparable {
         if (o instanceof NGram){
             NGram other = (NGram) o;
 
-            if (other.size() != this.size())
-                return -1;
+            for (int i = 0; i < Math.min(other.size(), this.size()); i++){
+                int val = this.words[i].compareTo(other.words[i]);
 
-            int compareValue = 0;
+                if (val != 0)
+                    return val;
+            }
 
-            for(int i = 0; i < other.size(); i++)
-                compareValue += other.words[i].compareTo(this.words[i]);
-
-            return compareValue;
+            return 0;
         }
 
-        return -1;
+        return 1;
     }
 }

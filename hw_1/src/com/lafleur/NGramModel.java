@@ -1,21 +1,19 @@
 package com.lafleur;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Represents an NGram statistical model.
  */
 public class NGramModel {
 
-    private HashSet<NGram> vocabulary;
+    private TreeSet<NGram> vocabulary;
     private TreeMap<NGram, Double> frequencyTable;
     private int valueOfN;
     private boolean withSmoothing;
 
     public NGramModel(int _valueOfN, boolean smoothing) {
-        vocabulary = new HashSet<>();
+        vocabulary = new TreeSet<>();
         frequencyTable = new TreeMap<>();
         valueOfN = _valueOfN;
         withSmoothing = smoothing;
@@ -74,12 +72,44 @@ public class NGramModel {
         // Get all the NGrams in the provided sentence
         List<NGram> nGramsInSentence = NGram.getNGramsFromSentence(sentence, valueOfN);
 
-        double product = lg(0.0);
+        double product = 0.0;
 
-        for (NGram g : nGramsInSentence) {
-            if (frequencyTable.containsKey(g))
-                product += lg(frequencyTable.get(g) / totalFrequency());
+        if (valueOfN == 1){
+            for (NGram g : nGramsInSentence) {
+                if (frequencyTable.containsKey(g))
+                    product += lg(frequencyTable.get(g) / totalFrequency());
+            }
+        } else {
+            for (NGram g : nGramsInSentence) {
+                // Gather all words that begin with the first word of the NGram
+                String firstWord = g.getNthWord(1);
+                ArrayList<Map.Entry<NGram, Double>> list = new ArrayList<>();
+                for(Map.Entry<NGram, Double> e : frequencyTable.entrySet()){
+
+                    if (e.getKey().isNthWord(firstWord, 1))
+                        list.add(e);
+                }
+
+                // Next, calculate how often the first word appears, and how often the first
+                // and second appear
+                String secondWord = g.getNthWord(2);
+
+                double frequencyOfFirst = 0.0;
+                double frequencyOfBoth = 0.0;
+
+                for(Map.Entry<NGram, Double> e : list){
+                    frequencyOfFirst += e.getValue();
+
+                    if (e.getKey().isNthWord(secondWord, 2))
+                        frequencyOfBoth += e.getValue();
+                }
+
+                // Now we calculate the log prob of our conditional probability
+                product += lg(frequencyOfBoth / frequencyOfFirst);
+            }
         }
+
+        if (product == 0.0) return Double.NEGATIVE_INFINITY;
 
         return product;
     }
@@ -90,7 +120,10 @@ public class NGramModel {
      * @param logProb - the logarithm probability
      * @return the true probability
      */
-    public double trueProbability(double logProb){
+    public double trueProb(double logProb) {
+        if (logProb == Double.NEGATIVE_INFINITY)
+            return 0.0;
+
         return Math.pow(2, logProb);
     }
 
@@ -103,5 +136,9 @@ public class NGramModel {
     private double lg(double number){
         if (number == 0.0) return 0.0;
         return Math.log(number) / Math.log(2);
+    }
+
+    public int getValueOfN() {
+        return valueOfN;
     }
 }
