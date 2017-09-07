@@ -8,12 +8,9 @@ public class Main {
 //        if (!acceptableArgs(args)) System.exit(1); // TODO: Uncomment this when you're ready to turn it in
         String sentence = "This is a sentence";
 
-        for (int n = 1; n <= 3; n++){
-            for(NGram ngram : NGram.getNGramsFromSentence(sentence, n))
-                System.out.println(ngram.toString());
-
-            System.out.println();
-        }
+        NGramModel unigramModel = new NGramModel(1, false);
+        unigramModel.addAll(NGram.getNGramsFromSentence(sentence, 1));
+        System.out.println("Probability of is: " + unigramModel.probabilityOfSentence("is"));
     }
 
     private static boolean acceptableArgs(String[] args){

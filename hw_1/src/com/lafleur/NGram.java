@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Class representing a single N-gram.
  */
-public class NGram {
+public class NGram implements Comparable {
 
     public static final String PHI = ""; // PHI is the empty string - counts as the beginning of the sentence
 
@@ -95,5 +95,24 @@ public class NGram {
         }
 
         return nGrams;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if (o instanceof NGram){
+            NGram other = (NGram) o;
+
+            if (other.size() != this.size())
+                return -1;
+
+            int compareValue = 0;
+
+            for(int i = 0; i < other.size(); i++)
+                compareValue += other.words[i].compareTo(this.words[i]);
+
+            return compareValue;
+        }
+
+        return -1;
     }
 }

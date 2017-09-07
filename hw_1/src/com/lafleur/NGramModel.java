@@ -10,7 +10,7 @@ import java.util.TreeMap;
 public class NGramModel {
 
     private HashSet<NGram> vocabulary;
-    private TreeMap<NGram, Integer> frequencyTable;
+    private TreeMap<NGram, Double> frequencyTable;
     private int valueOfN;
     private boolean withSmoothing;
 
@@ -33,9 +33,9 @@ public class NGramModel {
         vocabulary.add(ngram);
 
         if (frequencyTable.containsKey(ngram)){
-            frequencyTable.put(ngram, frequencyTable.get(ngram) + 1);
+            frequencyTable.put(ngram, frequencyTable.get(ngram) + 1.0);
         } else {
-            frequencyTable.put(ngram, 1);
+            frequencyTable.put(ngram, 1.0);
         }
     }
 
@@ -54,10 +54,10 @@ public class NGramModel {
      *
      * @return int - total frequency
      */
-    public int totalFrequency(){
-        int count = 0;
+    public double totalFrequency(){
+        double count = 0;
 
-        for(int i : frequencyTable.values())
+        for(double i : frequencyTable.values())
             count += i;
 
         return count;
@@ -70,8 +70,28 @@ public class NGramModel {
      * @param sentence - Sentence to calculate the probability of
      * @return double, in log probability form
      */
-    public double probabilityOfSentence(String sentence){
+    public double probabilityOfSentence(String sentence) {
+        // Get all the NGrams in the provided sentence
+        List<NGram> nGramsInSentence = NGram.getNGramsFromSentence(sentence, valueOfN);
 
-        return 0.0; // TODO: This
+        double product = lg(0.0);
+
+        for (NGram g : nGramsInSentence) {
+            if (frequencyTable.containsKey(g))
+                product += lg(frequencyTable.get(g) / totalFrequency());
+        }
+
+        return product;
+    }
+
+    /**
+     * Helper method. Returns the log base 2 of the number provided.
+     *
+     * @param number - the number to get the log of
+     * @return The log of number with a base of 2
+     */
+    private double lg(double number){
+        if (number == 0.0) return 0.0;
+        return Math.log(number) / Math.log(2);
     }
 }
