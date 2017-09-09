@@ -86,8 +86,8 @@ public class NGram implements Comparable {
         List<NGram> nGrams = new ArrayList<>();
         String[] words = sentence.split(" ");
 
-        if (words.length < n)
-            throw new RuntimeException("Cannot provide a sentence greater than n!");
+//        if (words.length > n)
+//            throw new RuntimeException("Cannot provide a sentence greater than n!");
 
         if (n == 1){
             for (String word1 : words) {

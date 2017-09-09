@@ -1,32 +1,56 @@
 package com.lafleur;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 
     public static void main (String[] args){
-//        if (!acceptableArgs(args)) System.exit(1); // TODO: Uncomment this when you're ready to turn it in
-        String[] sentences = {"This is a sentence", "This is another sentence", "And yet another sentence", "But that is all we have" };
+        if (!acceptableArgs(args)) System.exit(1); // TODO: Uncomment this when you're ready to turn it in
 
-        NGramModel unigramModel = new NGramModel(1, false);
-        NGramModel bigramModel = new NGramModel(2, false);
-        NGramModel smoothedModel = new NGramModel(2, true);
+        // The models we are going to be using
+        NGramModel[] models = { new NGramModel(1, false), new NGramModel(2, false), new NGramModel(2, true) };
 
-        for (String s : sentences) {
-            unigramModel.addAll(NGram.getNGramsFromSentence(s, unigramModel.getValueOfN()));
-            bigramModel.addAll(NGram.getNGramsFromSentence(s, bigramModel.getValueOfN()));
-            smoothedModel.addAll(NGram.getNGramsFromSentence(s, smoothedModel.getValueOfN()));
+        // Train all the models from the training file
+        List<String> sentences = getSentences(new File(args[0]));
+
+        for(String s : sentences){
+            for (NGramModel m : models)
+                m.addAll(NGram.getNGramsFromSentence(s, m.getValueOfN()));
         }
 
-        System.out.println(unigramModel.trueProbability(unigramModel.probabilityOfSentence("And now this")));
-        System.out.println(bigramModel.trueProbability(bigramModel.probabilityOfSentence("And now this")));
-        System.out.println(smoothedModel.trueProbability(smoothedModel.probabilityOfSentence("And now this")));
+        if (args[1].equalsIgnoreCase("-test")) {
+            // Publish the log probs of each of the test sentences
+            sentences = getSentences(new File(args[2]));
+
+            for (String s : sentences) {
+                System.out.println("S = " + s + "\n");
+                System.out.println("Unsmoothed Unigrams, logprob(S) = " + models[0].probabilityOfSentence(s));
+                System.out.println("Unsmoothed Bigrams, logprob(S) = " + models[1].probabilityOfSentence(s));
+                System.out.println("Smoothed Bigrams, logprob(S) = " + models[2].probabilityOfSentence(s));
+                System.out.println();
+            }
+        } else {
+            // TODO: Generate sentences
+        }
     }
 
     private static List<String> getSentences(File f){
+        ArrayList<String> sentences = new ArrayList<>();
 
-        return null; // TODO: This
+        try {
+            Scanner s = new Scanner(f);
+
+            while (s.hasNextLine())
+                sentences.add(s.nextLine());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return sentences;
     }
 
     private static boolean acceptableArgs(String[] args){
