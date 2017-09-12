@@ -11,12 +11,14 @@ public class NGramModel {
     private TreeMap<NGram, Double> frequencyTable;
     private int valueOfN;
     private boolean withSmoothing;
+    private boolean hasBeenSmoothed;
 
     public NGramModel(int _valueOfN, boolean smoothing) {
         vocabulary = new TreeSet<>();
         frequencyTable = new TreeMap<>();
         valueOfN = _valueOfN;
         withSmoothing = smoothing;
+        hasBeenSmoothed = false;
     }
 
     /**
@@ -81,100 +83,34 @@ public class NGramModel {
                     product += lg(frequencyTable.get(g) / totalFrequency());
             }
         } else {
-            if (withSmoothing) {
-                // Gather any new vocab words from the sentence
-                ArrayList<NGram> newWords = new ArrayList<>();
+            for (NGram g : nGramsInSentence) {
+                // Gather all words that begin with the first word of the NGram
+                String firstWord = g.getNthWord(1);
+                ArrayList<Map.Entry<NGram, Double>> list = new ArrayList<>();
+                for(Map.Entry<NGram, Double> e : frequencyTable.entrySet()){
 
-                for (NGram ngram : nGramsInSentence)
-                    if (!vocabulary.contains(ngram))
-                        newWords.add(ngram);
-
-                // Create a new vocabulary and new frequency set with all of the new NGrams from the given sentence
-                TreeSet<NGram> newVocab = (TreeSet<NGram>) vocabulary.clone();
-                TreeMap<NGram, Double> newFrequencyTable = (TreeMap<NGram, Double>) frequencyTable.clone();
-
-                // Add the new words to our new vocabulary
-                for (NGram ngram : newWords)
-                    newVocab.add(ngram);
-
-                // Add the new words to our new frequency table with a frequency of 0 (for now)
-                for (NGram nGram : newWords)
-                    newFrequencyTable.put(nGram, 0.0);
-
-                // Gather up our new total frequency
-                double newTotalFrequency = 0.0;
-
-                for (double d : newFrequencyTable.values())
-                    newTotalFrequency += d;
-
-                // Update the frequencies in our new frequency table
-                for (Map.Entry<NGram, Double> e : newFrequencyTable.entrySet()) {
-                    newFrequencyTable.put(e.getKey(), newFrequencyTable.get(e.getKey()) + 1.0
-                            / (newTotalFrequency + ((double) newVocab.size())));
+                    if (e.getKey().isNthWord(firstWord, 1))
+                        list.add(e);
                 }
 
-                // Now calculate the probability with the new sets of things
-                for (NGram g : nGramsInSentence) {
+                // Next, calculate how often the first word appears, and how often the first
+                // and second appear
+                String secondWord = g.getNthWord(2);
 
-                    // Gather all words that begin with the first word of the NGram
-                    String firstWord = g.getNthWord(1);
-                    ArrayList<Map.Entry<NGram, Double>> list = new ArrayList<>();
-                    for(Map.Entry<NGram, Double> e : newFrequencyTable.entrySet()){
-                        if (e.getKey().isNthWord(firstWord, 1))
-                            list.add(e);
-                    }
+                double frequencyOfFirst = 0.0;
+                double frequencyOfBoth = 0.0;
 
-                    // Next, calculate how often the first word appears, and how often the first
-                    // and second appear
-                    String secondWord = g.getNthWord(2);
+                for(Map.Entry<NGram, Double> e : list){
+                    frequencyOfFirst += e.getValue();
 
-                    double frequencyOfFirst = 0.0;
-                    double frequencyOfBoth = 0.0;
-
-                    for(Map.Entry<NGram, Double> e : list){
-                        frequencyOfFirst += e.getValue();
-
-                        if (e.getKey().isNthWord(secondWord, 2))
-                            frequencyOfBoth += e.getValue();
-                    }
-
-                    // Now we calculate the log prob of our conditional probability
-                    if (frequencyOfFirst != 0.0) {
-                        product += lg(frequencyOfBoth / frequencyOfFirst);
-                        flag = true;
-                    }
+                    if (e.getKey().isNthWord(secondWord, 2))
+                        frequencyOfBoth += e.getValue();
                 }
 
-            } else {
-                for (NGram g : nGramsInSentence) {
-                    // Gather all words that begin with the first word of the NGram
-                    String firstWord = g.getNthWord(1);
-                    ArrayList<Map.Entry<NGram, Double>> list = new ArrayList<>();
-                    for(Map.Entry<NGram, Double> e : frequencyTable.entrySet()){
-
-                        if (e.getKey().isNthWord(firstWord, 1))
-                            list.add(e);
-                    }
-
-                    // Next, calculate how often the first word appears, and how often the first
-                    // and second appear
-                    String secondWord = g.getNthWord(2);
-
-                    double frequencyOfFirst = 0.0;
-                    double frequencyOfBoth = 0.0;
-
-                    for(Map.Entry<NGram, Double> e : list){
-                        frequencyOfFirst += e.getValue();
-
-                        if (e.getKey().isNthWord(secondWord, 2))
-                            frequencyOfBoth += e.getValue();
-                    }
-
-                    // Now we calculate the log prob of our conditional probability
-                    if (frequencyOfFirst != 0.0) {
-                        product += lg(frequencyOfBoth / frequencyOfFirst);
-                        flag = true;
-                    }
+                // Now we calculate the log prob of our conditional probability
+                if (frequencyOfFirst != 0.0) {
+                    product += lg(frequencyOfBoth / frequencyOfFirst);
+                    flag = true;
                 }
             }
         }
@@ -182,6 +118,37 @@ public class NGramModel {
         if (product == 0.0 && flag) return Double.NEGATIVE_INFINITY;
 
         return product;
+    }
+
+    public void smoothOver(TreeSet<NGram> newNGrams) {
+        if (withSmoothing && !hasBeenSmoothed) {
+            vocabulary.addAll(newNGrams);
+
+            double newFrequencyTotal = 0.0;
+            for (double d : frequencyTable.values()) newFrequencyTotal += d;
+
+            newFrequencyTotal += (double) vocabulary.size();
+
+            for (NGram nGram : vocabulary) {
+                if (frequencyTable.containsKey(nGram)) {
+                    frequencyTable.put(nGram, (frequencyTable.get(nGram) + 1.0) / newFrequencyTotal);
+                } else {
+                    frequencyTable.put(nGram, 1.0 / newFrequencyTotal);
+                }
+            }
+
+            hasBeenSmoothed = true;
+        }
+    }
+
+
+    public String generateSentence(String seed) {
+        if (valueOfN != 2 || !withSmoothing)
+            throw new RuntimeException("Cannot generate sentences without smoothed BiGrams!");
+
+        // TODO: This
+
+        return null;
     }
 
     /**
