@@ -24,28 +24,34 @@ public class Main {
                 m.addAll(NGram.getNGramsFromSentence(s, m.getValueOfN()));
         }
 
-        if (args[1].equalsIgnoreCase("-test")) {
-            sentences = getSentences(new File(args[2]));
+        sentences = getSentences(new File(args[2]));
+        models[2].smoothOver();
 
-            // Gather all of the new NGrams from the test file and smooth over the smooth model with them
-            TreeSet<NGram> newNGrams = new TreeSet<>();
+        DecimalFormat df = new DecimalFormat("###.####");
 
-            for (String s : sentences)
-                newNGrams.addAll(NGram.getNGramsFromSentence(s, 2));
+        for (String s : sentences) {
+            System.out.println("S = " + s + "\n");
 
-            models[2].smoothOver(newNGrams);
+            double d0 = models[0].probabilityOfSentence(s);
+            double d1 = models[1].probabilityOfSentence(s);
+            double d2 = models[2].probabilityOfSentence(s);
 
-            DecimalFormat df = new DecimalFormat("###.####");
+            if (((Double)d0).isInfinite())
+                System.out.println("Unsmoothed Unigrams, logprob(S) = undefined");
+            else
+                System.out.println("Unsmoothed Unigrams, logprob(S) = " + df.format(d0));
 
-            for (String s : sentences) {
-                System.out.println("S = " + s + "\n");
-                System.out.println("Unsmoothed Unigrams, logprob(S) = " + df.format(models[0].probabilityOfSentence(s)));
-                System.out.println("Unsmoothed Bigrams, logprob(S) = " + df.format(models[1].probabilityOfSentence(s)));
-                System.out.println("Smoothed Bigrams, logprob(S) = " + df.format(models[2].probabilityOfSentence(s)));
-                System.out.println();
-            }
-        } else {
-            // TODO: Generate sentences
+            if (((Double)d1).isInfinite())
+                System.out.println("Unsmoothed Bigrams, logprob(S) = undefined");
+            else
+                System.out.println("Unsmoothed Bigrams, logprob(S) = " + df.format(d1));
+
+            if (((Double)d2).isInfinite())
+                System.out.println("Smoothed Bigrams, logprob(S) = undefined");
+            else
+                System.out.println("Smoothed Bigrams, logprob(S) = " + df.format(d2));
+
+            System.out.println();
         }
     }
 
@@ -70,7 +76,7 @@ public class Main {
             return false;
         }
 
-        if (!(args[1].equalsIgnoreCase("-test") || args[1].equalsIgnoreCase("-gen"))){
+        if (!(args[1].equalsIgnoreCase("-test"))){
             System.err.println("\"" + args[1] + "\" is not an acceptable option!");
             return false;
         }

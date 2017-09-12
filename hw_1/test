@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cp out/artifacts/hw_1_jar/hw_1.jar .
+java -jar hw_1.jar train.txt -test test.txt >> tmp.txt
+diff -y tmp.txt ngrams-test.trace
+rm hw_1.jar tmp.txt

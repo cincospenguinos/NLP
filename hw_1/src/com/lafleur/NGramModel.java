@@ -7,14 +7,12 @@ import java.util.*;
  */
 public class NGramModel {
 
-    private TreeSet<NGram> vocabulary;
     private TreeMap<NGram, Double> frequencyTable;
     private int valueOfN;
     private boolean withSmoothing;
     private boolean hasBeenSmoothed;
 
     public NGramModel(int _valueOfN, boolean smoothing) {
-        vocabulary = new TreeSet<>();
         frequencyTable = new TreeMap<>();
         valueOfN = _valueOfN;
         withSmoothing = smoothing;
@@ -29,8 +27,6 @@ public class NGramModel {
     public void add(NGram ngram){
         if (ngram.size() != valueOfN)
             throw new RuntimeException("The provided NGram is " + ngram.size() + "; expected " + valueOfN);
-
-        vocabulary.add(ngram);
 
         if (frequencyTable.containsKey(ngram)){
             frequencyTable.put(ngram, frequencyTable.get(ngram) + 1.0);
@@ -54,7 +50,7 @@ public class NGramModel {
      *
      * @return int - total frequency
      */
-    public double totalFrequency(){
+    public double totalFrequency() {
         double count = 0;
 
         for(double i : frequencyTable.values())
@@ -75,7 +71,8 @@ public class NGramModel {
         List<NGram> nGramsInSentence = NGram.getNGramsFromSentence(sentence, valueOfN);
 
         double product = 0.0;
-        boolean flag = false;
+
+        // TODO: Do this all over again
 
         if (valueOfN == 1){
             for (NGram g : nGramsInSentence) {
@@ -83,6 +80,7 @@ public class NGramModel {
                     product += lg(frequencyTable.get(g) / totalFrequency());
             }
         } else {
+            // TODO: Do this all over again
             for (NGram g : nGramsInSentence) {
                 // Gather all words that begin with the first word of the NGram
                 String firstWord = g.getNthWord(1);
@@ -107,65 +105,28 @@ public class NGramModel {
                         frequencyOfBoth += e.getValue();
                 }
 
-                // Now we calculate the log prob of our conditional probability
-                if (frequencyOfFirst != 0.0) {
-                    product += lg(frequencyOfBoth / frequencyOfFirst);
-                    flag = true;
-                }
+                product += lg(frequencyOfBoth / frequencyOfFirst);
             }
         }
-
-        if (product == 0.0 && flag) return Double.NEGATIVE_INFINITY;
 
         return product;
     }
 
-    public void smoothOver(TreeSet<NGram> newNGrams) {
+    public void smoothOver() {
         if (withSmoothing && !hasBeenSmoothed) {
-            vocabulary.addAll(newNGrams);
+            // Count how many unique unigrams there are
+            TreeSet<String> uniqueUnigrams = new TreeSet<>();
+            for (NGram nGram : frequencyTable.keySet())
+                for (int i = 1; i <= nGram.size(); i++)
+                    uniqueUnigrams.add(nGram.getNthWord(i));
 
-            double newFrequencyTotal = 0.0;
-            for (double d : frequencyTable.values()) newFrequencyTotal += d;
+            // Add our "new bigrams" to the total frequency total
+            double newFrequencyTotal = totalFrequency() + Math.pow(uniqueUnigrams.size(), 2);
 
-            newFrequencyTotal += (double) vocabulary.size();
-
-            for (NGram nGram : vocabulary) {
-                if (frequencyTable.containsKey(nGram)) {
-                    frequencyTable.put(nGram, (frequencyTable.get(nGram) + 1.0) / newFrequencyTotal);
-                } else {
-                    frequencyTable.put(nGram, 1.0 / newFrequencyTotal);
-                }
-            }
+            // Update all of our
 
             hasBeenSmoothed = true;
         }
-    }
-
-
-    public String generateSentence(String seed) {
-        if (valueOfN != 2 || !withSmoothing)
-            throw new RuntimeException("Cannot generate sentences without smoothed BiGrams!");
-
-        // TODO: This
-
-        return null;
-    }
-
-    /**
-     * Returns the true probability of the log probability provided. For debugging purposes.
-     *
-     * @param logProb - the logarithm probability
-     * @return the true probability
-     */
-    public double trueProbabilityCompensative(double logProb) {
-        if (logProb == Double.NEGATIVE_INFINITY)
-            return 0.0;
-
-        return Math.pow(2, logProb);
-    }
-
-    public double trueProbability(double logProb) {
-        return Math.pow(2, logProb);
     }
 
     /**
@@ -175,7 +136,6 @@ public class NGramModel {
      * @return The log of number with a base of 2
      */
     private double lg(double number){
-        if (number == 0.0) return 0.0;
         return Math.log(number) / Math.log(2);
     }
 
