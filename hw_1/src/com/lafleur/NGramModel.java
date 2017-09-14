@@ -8,6 +8,8 @@ import java.util.*;
 public class NGramModel {
 
     private TreeMap<NGram, Double> frequencyTable;
+    private TreeSet<String> vocabulary;
+    private double smoothedTotalFrequency;
     private int valueOfN;
     private boolean withSmoothing;
     private boolean hasBeenSmoothed;
@@ -17,6 +19,7 @@ public class NGramModel {
         valueOfN = _valueOfN;
         withSmoothing = smoothing;
         hasBeenSmoothed = false;
+        vocabulary = new TreeSet<>();
     }
 
     /**
@@ -28,10 +31,18 @@ public class NGramModel {
         if (ngram.size() != valueOfN)
             throw new RuntimeException("The provided NGram is " + ngram.size() + "; expected " + valueOfN);
 
+        for (int i = 1; i <= ngram.size(); i++)
+            vocabulary.add(ngram.getNthWord(i));
+
         if (frequencyTable.containsKey(ngram)){
             frequencyTable.put(ngram, frequencyTable.get(ngram) + 1.0);
         } else {
             frequencyTable.put(ngram, 1.0);
+        }
+
+        if (ngram.compareTo(NGram.getNGramsFromSentence("Wolf", 1).get(0)) == 0 && valueOfN == 1) {
+            double d = frequencyTable.get(ngram);
+            d++;
         }
     }
 
@@ -59,6 +70,10 @@ public class NGramModel {
         return count;
     }
 
+    public double vocabSize() {
+        return (double) vocabulary.size();
+    }
+
     /**
      * Returns the probability of the sentence provided given the sentence. This probability
      * is returned in log probability.
@@ -72,61 +87,81 @@ public class NGramModel {
 
         double product = 0.0;
 
-        // TODO: Do this all over again
-
         if (valueOfN == 1){
             for (NGram g : nGramsInSentence) {
-                if (frequencyTable.containsKey(g))
+                if (frequencyTable.containsKey(g)) {
+                    double d = frequencyTable.get(g);
                     product += lg(frequencyTable.get(g) / totalFrequency());
+                }
             }
         } else {
-            // TODO: Do this all over again
-            for (NGram g : nGramsInSentence) {
-                // Gather all words that begin with the first word of the NGram
-                String firstWord = g.getNthWord(1);
-                ArrayList<Map.Entry<NGram, Double>> list = new ArrayList<>();
-                for(Map.Entry<NGram, Double> e : frequencyTable.entrySet()){
-
-                    if (e.getKey().isNthWord(firstWord, 1))
-                        list.add(e);
-                }
-
-                // Next, calculate how often the first word appears, and how often the first
-                // and second appear
-                String secondWord = g.getNthWord(2);
-
-                double frequencyOfFirst = 0.0;
-                double frequencyOfBoth = 0.0;
-
-                for(Map.Entry<NGram, Double> e : list){
-                    frequencyOfFirst += e.getValue();
-
-                    if (e.getKey().isNthWord(secondWord, 2))
-                        frequencyOfBoth += e.getValue();
-                }
-
-                product += lg(frequencyOfBoth / frequencyOfFirst);
-            }
+            for (NGram g : nGramsInSentence)
+                product += logProbOfGivenPrevious(g);
         }
 
         return product;
     }
 
+    /**
+     * Smooths over this model, given that it has not been smoothed and is supposed to be smoothed.
+     */
     public void smoothOver() {
         if (withSmoothing && !hasBeenSmoothed) {
-            // Count how many unique unigrams there are
-            TreeSet<String> uniqueUnigrams = new TreeSet<>();
+            // Calculate the total number of bigrams that are in our "vocabulary"
+            TreeSet<String> unigrams = new TreeSet<>();
+
             for (NGram nGram : frequencyTable.keySet())
                 for (int i = 1; i <= nGram.size(); i++)
-                    uniqueUnigrams.add(nGram.getNthWord(i));
+                    unigrams.add(nGram.getNthWord(i));
 
-            // Add our "new bigrams" to the total frequency total
-            double newFrequencyTotal = totalFrequency() + Math.pow(uniqueUnigrams.size(), 2);
+//            double totalBigrams = Math.pow((double) unigrams.size(), 2.0); // This is our value V - the number of new 1s
+            double currentFrequency = totalFrequency(); // This is the old frequency count
+            smoothedTotalFrequency = unigrams.size() + currentFrequency;
 
-            // Update all of our
+            for (Map.Entry<NGram, Double> e : frequencyTable.entrySet())
+                frequencyTable.put(e.getKey(), (e.getValue() + 1.0) / smoothedTotalFrequency); // This is the smoothed total
 
             hasBeenSmoothed = true;
         }
+    }
+
+    /**
+     * Returns the log probability of the nGram provided.
+     *
+     * @param nGram - NGram to get the log prob of
+     * @return log prob of that nGram
+     */
+    private double logProbOf(NGram nGram) {
+        if (withSmoothing && hasBeenSmoothed) {
+            if (frequencyTable.containsKey(nGram))
+                return lg(frequencyTable.get(nGram) / smoothedTotalFrequency);
+            else
+                return lg(1.0 / smoothedTotalFrequency);
+        } else {
+            if (frequencyTable.containsKey(nGram))
+                return lg(frequencyTable.get(nGram) / totalFrequency());
+            else
+                return lg(0.0);
+        }
+    }
+
+    /**
+     * Returns the conditional log proability of the nGram provided.
+     *
+     * @param nGram - The nGram to check out
+     * @return log prob of the nGram given the previous words
+     */
+    private double logProbOfGivenPrevious(NGram nGram) {
+        double frequencyOfFirst = 0.0;
+
+        for (NGram g : frequencyTable.keySet())
+            if (g.isNthWord(nGram.getNthWord(1), 1))
+                frequencyOfFirst += frequencyTable.get(g);
+
+        if (withSmoothing && hasBeenSmoothed) // TODO: The issue is here. Talk to the TAs
+            return logProbOf(nGram) - lg(frequencyOfFirst / smoothedTotalFrequency);
+        else
+            return logProbOf(nGram) - lg(frequencyOfFirst / totalFrequency());
     }
 
     /**
@@ -141,5 +176,9 @@ public class NGramModel {
 
     public int getValueOfN() {
         return valueOfN;
+    }
+
+    public TreeMap<NGram, Double> getFrequencyTable() {
+        return frequencyTable;
     }
 }

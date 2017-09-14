@@ -19,13 +19,40 @@ public class Main {
         // Train all the models from the training file
         List<String> sentences = getSentences(new File(args[0]));
 
-        for(String s : sentences){
-            for (NGramModel m : models)
-                m.addAll(NGram.getNGramsFromSentence(s, m.getValueOfN()));
+        NGram wolfUnigram = new NGram(new String[] { "Wolf" });
+        int wolfCount = 0;
+
+        for(String s : sentences) {
+            for (NGramModel m : models) {
+                m.addAll(NGram.getNGramsFromSentence(s.toLowerCase(), m.getValueOfN()));
+            }
+
+            List<NGram> ngrams = NGram.getNGramsFromSentence(s.toLowerCase(), 1);
+
+            for (NGram n : ngrams) {
+                if (n.compareTo(wolfUnigram) == 0)
+                    wolfCount++;
+            }
+
+            System.out.println(wolfCount + "\t" + models[0].getFrequencyTable().get(wolfUnigram));
         }
 
         sentences = getSentences(new File(args[2]));
         models[2].smoothOver();
+
+//        int totalWords = 0;
+//
+//        try {
+//            Scanner scanner = new Scanner(new File(args[0]));
+//
+//            while(scanner.hasNext())
+//                totalWords++;
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//            System.exit(1);
+//        }
+//
+//        System.out.println(totalWords + "\t" + models[0].totalFrequency() + "\t");
 
         DecimalFormat df = new DecimalFormat("###.####");
 

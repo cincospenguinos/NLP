@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cp out/artifacts/hw_1_jar/hw_1.jar .
+java -jar hw_1.jar corpora/dev.txt -test corpora/dev-test.txt # >> tmp.txt
+# diff -y tmp.txt corpora/dev-test.trace
+# rm hw_1.jar tmp.txt
