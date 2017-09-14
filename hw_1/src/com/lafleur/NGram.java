@@ -9,6 +9,7 @@ import java.util.List;
 public class NGram implements Comparable {
 
     public static final String PHI = ""; // PHI is the empty string - counts as the beginning of the sentence
+    public static final NGram PHI_NGRAM = new NGram(new String[] { PHI });
 
     private String[] words;
 
@@ -25,11 +26,8 @@ public class NGram implements Comparable {
      * @param n - which position in the NGram
      * @return true if word is the nth word in the NGram
      */
-    public boolean isNthWord(String word, int n){
-        if (n > size() || n <= 0)
-            return false;
-
-        return words[n - 1].equalsIgnoreCase(word);
+    public boolean isNthWord(String word, int n) {
+        return !(n > size() || n <= 0) && words[n - 1].equalsIgnoreCase(word);
     }
 
     public String getNthWord(int n){
