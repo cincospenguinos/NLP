@@ -20,6 +20,16 @@ public class NGram implements Comparable {
     }
 
     /**
+     * Returns true if the first word of this NGram is the word provided.
+     *
+     * @param word - String word to check
+     * @return true if word is the first word in this NGram
+     */
+    public boolean startsWith(String word) {
+        return words[0].equalsIgnoreCase(word);
+    }
+
+    /**
      * Returns true if word is the nth word in this NGram.
      *
      * @param word - Word to check
@@ -73,6 +83,16 @@ public class NGram implements Comparable {
         return builder.toString();
     }
 
+    public List<NGram> getUnigrams() {
+        ArrayList<NGram> list = new ArrayList<>();
+
+        for (int i = 0; i < size(); i++) {
+            list.add(new NGram(new String[] { words[i] }));
+        }
+
+        return list;
+    }
+
     /**
      * Returns the complete collection of NGrams from the sentence provided with some size n.
      *
@@ -82,32 +102,35 @@ public class NGram implements Comparable {
      */
     public static List<NGram> getNGramsFromSentence(String sentence, int n){
         List<NGram> nGrams = new ArrayList<>();
-        String[] words = sentence.split(" ");
+        String[] words = sentence.split("\\s+");
 
         if (n == 1){
-            for (String word1 : words) {
-                String[] word = new String[1];
-                word[0] = word1;
-                nGrams.add(new NGram(word));
+            for (String word : words) {
+                if (word.equalsIgnoreCase(PHI))
+                    continue;
+
+                String[] unigram = new String[1];
+                unigram[0] = word;
+                nGrams.add(new NGram(unigram));
             }
-        } else {
-            for (int i = 0; i < words.length; i++){
-                String[] gram = new String[n];
+        } else if (n == 2) {
+            for (int i = 0; i < words.length; i++) {
+                if (words[i].equals(PHI))
+                    continue;
 
-                for (int j = 0; j < n; j++) {
-                    int wordIndex = i + j - (n - 1);
+                String[] bigram = new String[2];
 
-                    if (wordIndex < 0){
-                        gram[j] = PHI;
-                        continue;
-                    }
+                if (i == 0)
+                    bigram[0] = PHI;
+                else
+                    bigram[0] = words[i - 1];
 
-                    gram[j] = words[wordIndex];
-                }
+                bigram[1] = words[i];
 
-                nGrams.add(new NGram(gram));
+                nGrams.add(new NGram(bigram));
             }
-        }
+        } else
+            throw new RuntimeException("3+ grams have not been implemented!");
 
         return nGrams;
     }

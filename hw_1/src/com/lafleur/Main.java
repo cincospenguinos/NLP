@@ -63,6 +63,8 @@ public class Main {
 
             while (s.hasNextLine())
                 sentences.add(s.nextLine());
+
+            s.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

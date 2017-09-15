@@ -7,6 +7,7 @@ import java.util.*;
  */
 public class NGramModel {
 
+    private TreeMap<NGram, Double> unigramFrequencyTable;
     private TreeMap<NGram, Double> frequencyTable;
     private double totalFrequency;
 
@@ -16,6 +17,7 @@ public class NGramModel {
 
     public NGramModel(int _valueOfN, boolean smoothing) {
         frequencyTable = new TreeMap<>();
+        unigramFrequencyTable = new TreeMap<>();
         totalFrequency = 0.0;
         valueOfN = _valueOfN;
         withSmoothing = smoothing;
@@ -48,6 +50,15 @@ public class NGramModel {
      * @param list - list of NGrams to add
      */
     public void addAll(List<NGram> list){
+        for (int i = 0; i < list.size(); i += 2) {
+            for (NGram unigram : list.get(i).getUnigrams()) {
+                if (unigramFrequencyTable.containsKey(unigram))
+                    unigramFrequencyTable.put(unigram, unigramFrequencyTable.get(unigram) + 1.0);
+                else
+                    unigramFrequencyTable.put(unigram, 1.0);
+            }
+        }
+
         for(NGram n : list)
             add(n);
     }
@@ -74,7 +85,17 @@ public class NGramModel {
             }
         } else {
             for (NGram g : nGramsInSentence) {
-                // TODO: Do this all over again
+                // Grab the frequency of the NGram g as a whole
+                double frequencyOfNGram = 0.0;
+
+                if (frequencyTable.containsKey(g))
+                    frequencyOfNGram = frequencyTable.get(g);
+
+                // Grab the frequency of just the first word of g --> P(B & *)
+                double frequencyOfFirstWord = unigramFrequencyTable.get(g.getUnigrams().get(0));
+
+                // Divide the two and add them to product
+                product += lg(frequencyOfNGram / frequencyOfFirstWord);
             }
         }
 
@@ -83,6 +104,7 @@ public class NGramModel {
 
     public void smoothOver() {
         if (withSmoothing && !hasBeenSmoothed) {
+            // TODO: This
             // Count how many unique unigrams there are
             TreeSet<String> uniqueUnigrams = new TreeSet<>();
             for (NGram nGram : frequencyTable.keySet())
