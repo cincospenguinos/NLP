@@ -25,7 +25,6 @@ public class Main {
         }
 
         sentences = getSentences(new File(args[2]));
-        models[2].smoothOver();
 
         DecimalFormat df = new DecimalFormat("###.####");
 

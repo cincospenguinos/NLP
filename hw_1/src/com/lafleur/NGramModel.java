@@ -88,36 +88,30 @@ public class NGramModel {
                 // Grab the frequency of the NGram g as a whole
                 double frequencyOfNGram = 0.0;
 
-                if (frequencyTable.containsKey(g))
+                if (withSmoothing) {
+                    if (frequencyTable.containsKey(g))
+                        frequencyOfNGram = frequencyTable.get(g) + 1;
+                    else
+                        frequencyOfNGram = 1.0;
+                } else if (frequencyTable.containsKey(g))
                     frequencyOfNGram = frequencyTable.get(g);
 
                 // Grab the frequency of just the first word of g --> P(B & *)
                 double frequencyOfFirstWord = unigramFrequencyTable.get(g.getUnigrams().get(0));
 
                 // Divide the two and add them to product
-                product += lg(frequencyOfNGram / frequencyOfFirstWord);
+                if (withSmoothing)
+                    product += lg(frequencyOfNGram / (frequencyOfFirstWord + getUniqueUnigrams()));
+                else
+                    product += lg(frequencyOfNGram / frequencyOfFirstWord);;
             }
         }
 
         return product;
     }
 
-    public void smoothOver() {
-        if (withSmoothing && !hasBeenSmoothed) {
-            // TODO: This
-            // Count how many unique unigrams there are
-            TreeSet<String> uniqueUnigrams = new TreeSet<>();
-            for (NGram nGram : frequencyTable.keySet())
-                for (int i = 1; i <= nGram.size(); i++)
-                    uniqueUnigrams.add(nGram.getNthWord(i));
-
-            // Add our "new bigrams" to the total frequency total
-            double newFrequencyTotal = totalFrequency + Math.pow(uniqueUnigrams.size(), 2);
-
-            // Update all of our
-
-            hasBeenSmoothed = true;
-        }
+    private double getUniqueUnigrams() {
+        return (double) unigramFrequencyTable.keySet().size();
     }
 
     /**
