@@ -11,8 +11,7 @@
     <property name="jar_file" location="jar_file"/>
 
     <!-- Setup the build directory -->
-    <target name="init">
-        <tstamp/>
+    <target name="init" depends="clean">
         <mkdir dir="${build}"/>
     </target>
 
@@ -22,11 +21,16 @@
 
     <target name="jar" depends="compile">
         <mkdir dir="${jar_file}"/>
-        <jar jarfile="${jar_file}/ProgrammingHW2-${DSTAMP}.jar" basedir="${build}"/>
+        <jar jarfile="${jar_file}/ProgrammingHW2.jar" basedir="${build}">
+            <manifest>
+                <attribute name="Main-Class" value="main.cs5340.alafleur.Main"/>
+            </manifest>
+        </jar>
     </target>
 
     <target name="clean" description="clean up">
         <delete dir="${build}"/>
-        <delete dir="${jar}"/>
+        <delete dir="${jar_file}"/>
+        <delete dir="out"/>
     </target>
 </project>

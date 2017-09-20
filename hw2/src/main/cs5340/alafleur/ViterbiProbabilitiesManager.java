@@ -100,14 +100,4 @@ public class ViterbiProbabilitiesManager {
         } else
             return DEFAULT_PROBABILITY;
     }
-
-    /**
-     * Returns the log prob of the value provided.
-     *
-     * @param value - value to get the log prob of
-     * @return double - log prob of value
-     */
-    public double logProb(double value) {
-        return Math.log(value) / Math.log(2);
-    }
 }

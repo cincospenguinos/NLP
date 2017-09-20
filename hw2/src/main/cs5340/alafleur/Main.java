@@ -48,7 +48,8 @@ public class Main {
             Scanner scanner = new Scanner(new File(args[1]));
 
             while (scanner.hasNextLine()) {
-
+                String sentence = scanner.nextLine();
+                viterbi.processSentence(sentence);
             }
 
             scanner.close();

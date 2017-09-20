@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+ant clean &> /dev/null
+if ant jar >> build_log.txt; then
+    java -jar jar_file/ProgrammingHW2.jar probs.txt sents.txt >> tmp.txt
+    diff -y cs5340-trace.txt tmp.txt
+    rm tmp.txt
+    rm build_log.txt
+else
+    echo 'Build failed!'
+    cat build_log.txt
+fi

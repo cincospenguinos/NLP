@@ -1,7 +1,5 @@
 package main.cs5340.alafleur;
 
-import org.jetbrains.annotations.Nullable;
-
 /**
  * A single part of speech in a sentence.
  */
@@ -56,9 +54,8 @@ public enum PartOfSpeech {
         return STRING_PHI.equalsIgnoreCase(word);
     }
 
-    @Nullable
     public static PartOfSpeech toPartOfSpeech(String word) {
-        if (!isPartOfSpeech(word))
+        if (!isPartOfSpeechOrPhi(word))
             throw new RuntimeException("\"" + word + "\" is not a part of speech.");
 
         if (word.equalsIgnoreCase("inf"))
@@ -69,6 +66,8 @@ public enum PartOfSpeech {
             return NOUN;
         if (word.equalsIgnoreCase("prep"))
             return PREP;
+        if (word.equalsIgnoreCase("phi"))
+            return PHI;
 
         return null; // TODO: Maybe not return null?
     }
