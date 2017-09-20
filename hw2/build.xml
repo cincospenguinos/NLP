@@ -8,7 +8,7 @@
     <!-- Global vars -->
     <property name="src" location="src"/>
     <property name="build" location="build"/>
-    <property name="jar_file" location="jar_file"/>
+    <property name="jar" location="jar_file"/>
 
     <!-- Setup the build directory -->
     <target name="init" depends="clean">
@@ -20,8 +20,8 @@
     </target>
 
     <target name="jar" depends="compile">
-        <mkdir dir="${jar_file}"/>
-        <jar jarfile="${jar_file}/ProgrammingHW2.jar" basedir="${build}">
+        <mkdir dir="${jar}"/>
+        <jar jarfile="${jar}/ProgrammingHW2.jar" basedir="${build}">
             <manifest>
                 <attribute name="Main-Class" value="main.cs5340.alafleur.Main"/>
             </manifest>
@@ -30,7 +30,7 @@
 
     <target name="clean" description="clean up">
         <delete dir="${build}"/>
-        <delete dir="${jar_file}"/>
+        <delete dir="${jar}"/>
         <delete dir="out"/>
     </target>
 </project>
