@@ -25,6 +25,7 @@ public class Viterbi {
 
         // Setup our variables for the Viterbi Algorithm
         // TODO: Add the back pointer datastructure
+        // Use a stack for each node - or something like that
         String[] wordsInSentence = sentence.split("\\s+");
 
         ArrayList<TreeMap<PartOfSpeech, Double>> scores = new ArrayList<>();
@@ -46,15 +47,21 @@ public class Viterbi {
         for (int i = 1; i < wordsInSentence.length; i++) {
             String word = wordsInSentence[i];
             map = new TreeMap<>();
-            PartOfSpeech bestPrevPos = getMaxPos(scores.get(i - 1));
 
-            for (PartOfSpeech pos : PartOfSpeech.values()) { // TODO: Is this the correct calculation?
+            for (PartOfSpeech pos : PartOfSpeech.values()) {
                 if (pos.equals(PartOfSpeech.PHI))
                     continue;
 
-                double score = logProb(probabilitiesManager.getEmissionProbabilityOf(word, pos)) +
-                        logProb(probabilitiesManager.getTransitionProbabilityOf(pos, bestPrevPos)) +
-                        scores.get(i - 1).get(bestPrevPos);
+                double maxValue = Double.NEGATIVE_INFINITY;
+                for(Map.Entry<PartOfSpeech, Double> e : scores.get(i - 1).entrySet()) {
+                    double value = logProb(probabilitiesManager.getTransitionProbabilityOf(pos, e.getKey())) +
+                            e.getValue();
+
+                    if (value > maxValue)
+                        maxValue = value;
+                }
+
+                double score = logProb(probabilitiesManager.getEmissionProbabilityOf(word, pos)) + maxValue;
                 map.put(pos, score);
             }
 
