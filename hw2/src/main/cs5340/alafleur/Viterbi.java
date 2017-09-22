@@ -3,6 +3,7 @@ package main.cs5340.alafleur;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Stack;
 import java.util.TreeMap;
 
 /**
@@ -24,6 +25,7 @@ public class Viterbi {
         System.out.println("PROCESSING SENTENCE: " + sentence + "\n");
 
         // Setup our variables for the Viterbi Algorithm
+        ArrayList<ArrayList<Triplet<String, PartOfSpeech, PartOfSpeech>>> backptrNetwork = new ArrayList<>(); // Word, past PoS, this PoS
         String[] wordsInSentence = sentence.split("\\s+");
 
         ArrayList<TreeMap<PartOfSpeech, Double>> scores = new ArrayList<>();
@@ -46,24 +48,33 @@ public class Viterbi {
             String word = wordsInSentence[i];
             map = new TreeMap<>();
 
+            ArrayList<Triplet<String, PartOfSpeech, PartOfSpeech>> backptr = new ArrayList<>();
+
             for (PartOfSpeech pos : PartOfSpeech.values()) {
                 if (pos.equals(PartOfSpeech.PHI))
                     continue;
 
                 double maxValue = Double.NEGATIVE_INFINITY;
+                PartOfSpeech bestPastPos = null;
                 for(Map.Entry<PartOfSpeech, Double> e : scores.get(i - 1).entrySet()) {
                     double value = logProb(probabilitiesManager.getTransitionProbabilityOf(pos, e.getKey())) +
                             e.getValue();
 
-                    if (value > maxValue)
+                    if (value > maxValue) {
                         maxValue = value;
+                        bestPastPos = e.getKey();
+                    }
                 }
 
                 double score = logProb(probabilitiesManager.getEmissionProbabilityOf(word, pos)) + maxValue;
                 map.put(pos, score);
+
+                // Manage the back pointer
+                backptr.add(new Triplet<>(word, pos, bestPastPos));
             }
 
             scores.add(map);
+            backptrNetwork.add(backptr);
         }
 
         System.out.println("FINAL VITERBI NETWORK");
@@ -80,6 +91,11 @@ public class Viterbi {
         // Follow the back pointer to find the proper sequence
 
         System.out.println("\nFINAL BACKPTR NETWORK");
+        for (ArrayList<Triplet<String, PartOfSpeech, PartOfSpeech>> list : backptrNetwork) {
+            for(Triplet<String, PartOfSpeech, PartOfSpeech> word : list) {
+                System.out.println("Backptr(" + word.getObj1() + "=" + word.getObj2() + ") = " + word.getObj3());
+            }
+        }
 
         System.out.println("\nBEST TAG SEQUENCE HAS LOG PROBABILITY = ");
         System.out.println("");

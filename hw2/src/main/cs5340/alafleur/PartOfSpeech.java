@@ -10,16 +10,16 @@ public enum PartOfSpeech {
     private static final String STRING_PHI = "phi";
 
     @Override
-    public String toString() { // TODO: Add these as they show up
+    public String toString() {
         switch(this) {
             case NOUN:
-                return "NOUN";
+                return "noun";
             case VERB:
-                return "VERB";
+                return "verb";
             case INF:
-                return "INF";
+                return "inf";
             case PREP:
-                return "PREP";
+                return "prep";
         }
 
         return super.toString();
