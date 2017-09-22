@@ -24,8 +24,6 @@ public class Viterbi {
         System.out.println("PROCESSING SENTENCE: " + sentence + "\n");
 
         // Setup our variables for the Viterbi Algorithm
-        // TODO: Add the back pointer datastructure
-        // Use a stack for each node - or something like that
         String[] wordsInSentence = sentence.split("\\s+");
 
         ArrayList<TreeMap<PartOfSpeech, Double>> scores = new ArrayList<>();
