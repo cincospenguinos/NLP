@@ -19,6 +19,11 @@ public class Viterbi {
         decimalFormat = new DecimalFormat("###.####");
     }
 
+    /**
+     * Prints out the expected output using the Viterbi Algorithm on the given sentence.
+     *
+     * @param sentence - String the sentence to process
+     */
     public void processSentence(String sentence) {
         if (probabilitiesManager == null) throw new RuntimeException("Probabilities manager has not been set!");
 
@@ -78,7 +83,6 @@ public class Viterbi {
         }
 
         System.out.println("FINAL VITERBI NETWORK");
-
         for (int i = 0; i < wordsInSentence.length; i++) {
             String word = wordsInSentence[i];
             TreeMap<PartOfSpeech, Double> m = scores.get(i);
@@ -88,8 +92,7 @@ public class Viterbi {
                         + decimalFormat.format(e.getValue()));
         }
 
-        // Follow the back pointer to find the proper sequence
-
+        // Print out the back pointer network
         System.out.println("\nFINAL BACKPTR NETWORK");
         for (ArrayList<Triplet<String, PartOfSpeech, PartOfSpeech>> list : backptrNetwork) {
             for(Triplet<String, PartOfSpeech, PartOfSpeech> word : list) {
@@ -97,7 +100,38 @@ public class Viterbi {
             }
         }
 
-        System.out.println("\nBEST TAG SEQUENCE HAS LOG PROBABILITY = ");
+        // Print out the best tag sequence probability
+        double bestSequenceLogProb = 0.0;
+        for (TreeMap<PartOfSpeech, Double> m : scores) {
+            double greatestProb = Double.NEGATIVE_INFINITY;
+
+            for (double d : m.values()) {
+                if (d > greatestProb)
+                    greatestProb = d;
+            }
+
+            bestSequenceLogProb += greatestProb;
+        }
+
+        // TODO: Ask about this - we're so close!!!
+        System.out.println("\nBEST TAG SEQUENCE HAS LOG PROBABILITY = " + bestSequenceLogProb);
+        for (int i = scores.size() - 1; i >= 0; i--) {
+            String word = wordsInSentence[i];
+
+            double bestScore = Double.NEGATIVE_INFINITY;
+            PartOfSpeech bestPos = null;
+
+            for (Map.Entry<PartOfSpeech, Double> entry : scores.get(i).entrySet()) {
+                if (entry.getValue() > bestScore) {
+                    bestPos = entry.getKey();
+                    bestScore = entry.getValue();
+                }
+            }
+
+            System.out.println(word + " -> " + bestPos);
+        }
+
+
         System.out.println("");
     }
 
