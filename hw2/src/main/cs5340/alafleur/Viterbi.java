@@ -16,7 +16,7 @@ public class Viterbi {
 
     public Viterbi(ViterbiProbabilitiesManager _manager) {
         setProbabilitiesManager(_manager);
-        decimalFormat = new DecimalFormat("###.####");
+        decimalFormat = new DecimalFormat("###.0000");
     }
 
     /**
@@ -102,19 +102,21 @@ public class Viterbi {
 
         // Print out the best tag sequence probability
         double bestSequenceLogProb = 0.0;
-        for (TreeMap<PartOfSpeech, Double> m : scores) {
-            double greatestProb = Double.NEGATIVE_INFINITY;
 
-            for (double d : m.values()) {
-                if (d > greatestProb)
-                    greatestProb = d;
-            }
+        double greatestProb = Double.NEGATIVE_INFINITY;
 
-            bestSequenceLogProb += greatestProb;
+        TreeMap<PartOfSpeech, Double> m = scores.get(scores.size() - 1);
+
+        for (double d : m.values()) {
+            if (d > greatestProb)
+                greatestProb = d;
         }
 
+        bestSequenceLogProb += greatestProb;
+
+
         // TODO: Ask about this - we're so close!!!
-        System.out.println("\nBEST TAG SEQUENCE HAS LOG PROBABILITY = " + bestSequenceLogProb);
+        System.out.println("\nBEST TAG SEQUENCE HAS LOG PROBABILITY = " + decimalFormat.format(bestSequenceLogProb));
         for (int i = scores.size() - 1; i >= 0; i--) {
             String word = wordsInSentence[i];
 
