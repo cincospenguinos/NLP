@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+inputs=ner-input-files
+
+ant >> build.txt
+if [ $? -eq 0 ]; then
+    rm build.txt
+    java -jar target/nlp_hw3.jar $inputs/train.txt $inputs/test.txt $inputs/locs.txt WORD
+else
+    echo 'Build failed.'
+fi
