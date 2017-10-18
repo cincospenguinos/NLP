@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project default="jar">
+    <property name="src" location="src"/>
+    <property name="bld" location="build"/>
+    <property name="trg" location="target"/>
+
+    <target name="clean">
+        <delete dir="${bld}"/>
+        <delete dir="${trg}"/>
+    </target>
+
+    <target name="compile" depends="clean">
+        <mkdir dir="${bld}"/>
+        <mkdir dir="${trg}"/>
+        <javac srcdir="${src}" destdir="${bld}"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar jarfile="${trg}/nlp_hw3.jar" basedir="${bld}">
+            <manifest>
+                <attribute name="Main-Class" value="main.cs5340.alafleur.Main"/>
+            </manifest>
+        </jar>
+    </target>
+</project>
