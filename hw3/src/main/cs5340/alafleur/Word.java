@@ -9,11 +9,11 @@ import java.util.regex.Pattern;
 public class Word {
 
     // Definitions
-    public static final String PHI = "\\PHI\\";
-    public static final String OMEGA = "\\OMEGA\\";
+    public static final String PHI = "PHI";
+    public static final String OMEGA = "OMEGA";
 
-    public static final String PHI_POS = "\\PHI_POS\\";
-    public static final String OMEGA_POS = "\\OMEGA_POS\\";
+    public static final String PHI_POS = "PHIPOS";
+    public static final String OMEGA_POS = "OMEGAPOS";
 
     private static final Pattern abbreviationPattern = Pattern.compile("[a-zA-Z\\.]+\\.");
 
@@ -28,7 +28,10 @@ public class Word {
     private boolean capitalized;
     private boolean location;
 
-    public Word (String prev, String thisWord, String next, String prevPos, String thisPos, String nextPos) {
+    // The label
+    private String label;
+
+    public Word (String prev, String thisWord, String next, String prevPos, String thisPos, String nextPos, String _label) {
         if (locations == null)
             throw new RuntimeException("Must set locations before attempting to instantiate a word!");
 
@@ -39,6 +42,8 @@ public class Word {
         abbreviation = isAbbreviation();
         capitalized = Character.isUpperCase(word.charAt(0));
         location = locations.contains(word);
+
+        label = _label;
     }
 
     /**
@@ -66,6 +71,10 @@ public class Word {
         }
 
         return null;
+    }
+
+    public String toString() {
+        return word;
     }
 
     public static void setLocations(TreeSet<String> locs) {
