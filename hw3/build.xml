@@ -7,6 +7,7 @@
     <target name="clean">
         <delete dir="${bld}"/>
         <delete dir="${trg}"/>
+        <delete dir="out"/>
     </target>
 
     <target name="compile" depends="clean">

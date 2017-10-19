@@ -24,9 +24,9 @@ public class Word {
     private String[] wordCon;
     private String partOfSpeech;
     private String[] partOfSpeechCon;
-    private boolean abbreviation;
-    private boolean capitalized;
-    private boolean location;
+    private boolean isAbbreviation;
+    private boolean isCapitalized;
+    private boolean isLocation;
 
     // The label
     private String label;
@@ -39,9 +39,9 @@ public class Word {
         wordCon = new String[] { prev, next };
         partOfSpeech = thisPos;
         partOfSpeechCon = new String[] { prevPos, nextPos };
-        abbreviation = isAbbreviation();
-        capitalized = Character.isUpperCase(word.charAt(0));
-        location = locations.contains(word);
+        isAbbreviation = isAbbreviation();
+        isCapitalized = Character.isUpperCase(word.charAt(0));
+        isLocation = locations.contains(word);
 
         label = _label;
     }
@@ -52,22 +52,31 @@ public class Word {
      * @param type - Type of feature to return
      * @return Object - That depends on the feature
      */
-    public Object getFeature(FeatureType type) {
+    public String getFeatureString(FeatureType type) {
         switch(type) {
             case WORD:
                 return word;
             case WORDCON:
-                return wordCon;
+                return wordCon[0] + " " + wordCon[1];
             case POS:
                 return partOfSpeech;
             case POSCON:
-                return partOfSpeechCon;
+                return partOfSpeechCon[0] + " " + partOfSpeechCon[1];
             case ABBR:
-                return abbreviation;
+                if (isAbbreviation)
+                    return "yes";
+                else
+                    return "no";
             case CAP:
-                return capitalized;
+                if (isCapitalized)
+                    return "yes";
+                else
+                    return "no";
             case LOCATION:
-                return location;
+                if (isLocation)
+                    return "yes";
+                else
+                    return "no";
         }
 
         return null;
