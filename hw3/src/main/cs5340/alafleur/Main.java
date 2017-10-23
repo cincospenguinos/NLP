@@ -157,8 +157,6 @@ public class Main {
 
             String label = thisLineSplit[0];
 
-//            Word w;
-
             if (i == 0 || omegaAppeared) {
                 thisWord = thisLineSplit[2];
                 thisPos = thisLineSplit[1];
@@ -197,6 +195,21 @@ public class Main {
                     nextWord = nextLineSplit[2];
                     nextPos = nextLineSplit[1];
                 }
+            }
+
+            // When we print the test file, we need to make sure that all of the words/pos are listed as UNK
+            // if they weren't in the training file
+
+            // TODO: Should we worry about thisWord/thisPos?
+            if (!isTraining) {
+                if (!trainingWords.contains(previousWord))
+                    previousWord = Word.UNK_WORD;
+                if (!trainingWords.contains(nextWord))
+                    nextWord = Word.UNK_WORD;
+                if (!trainingPos.contains(previousPos))
+                    previousPos = Word.UNK_POS;
+                if (!trainingPos.contains(nextPos))
+                    nextPos = Word.UNK_POS;
             }
 
             Word w = new Word(previousWord, thisWord, nextWord, previousPos, thisPos, nextPos, label);
