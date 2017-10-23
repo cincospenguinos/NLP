@@ -8,6 +8,8 @@
         <delete dir="${bld}"/>
         <delete dir="${trg}"/>
         <delete dir="out"/>
+        <delete file="train.txt.readable"/>
+        <delete file="test.txt.readable"/>
     </target>
 
     <target name="compile" depends="clean">

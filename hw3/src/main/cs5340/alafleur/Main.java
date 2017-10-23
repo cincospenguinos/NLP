@@ -9,11 +9,17 @@ import java.util.TreeSet;
 
 public class Main {
 
+    private static TreeSet<String> trainingWords;
+    private static TreeSet<String> trainingPos;
+
     public static void main(String[] args) {
         if (args.length < 4) {
             System.err.println("Expecting 4+ arguments");
             System.exit(1);
         }
+
+        trainingWords = new TreeSet<>();
+        trainingPos = new TreeSet<>();
 
         File trainFile = new File(args[0]);
         File testFile = new File(args[1]);
@@ -46,11 +52,9 @@ public class Main {
             desiredFeatures.add(f);
         }
 
-//        System.out.println("Desired features are " + desiredFeatures);
-
         // Output the proper files
-        outputFiles(trainFile, desiredFeatures);
-        outputFiles(testFile, desiredFeatures);
+        outputFiles(trainFile, desiredFeatures, true);
+        outputFiles(testFile, desiredFeatures, false);
     }
 
     /**
@@ -59,8 +63,8 @@ public class Main {
      * @param f - File to look at and convert to readable format
      * @param features - Features to consider
      */
-    private static void outputFiles(File f, ArrayList<FeatureType> features) {
-        ArrayList<Word> words = getWords(f, features);
+    private static void outputFiles(File f, ArrayList<FeatureType> features, boolean isTraining) {
+        ArrayList<Word> words = getWords(f, isTraining);
         outputReadableFile(f, features, words);
         outputVectorFile(f, features, words);
     }
@@ -72,7 +76,6 @@ public class Main {
      * @param features - Features to consider
      */
     private static void outputReadableFile(File f, ArrayList<FeatureType> features, ArrayList<Word> words) {
-        // TODO: Figure out if we are being used in test file or training file and print accordingly
         try {
             PrintWriter out = new PrintWriter(f.getName() + ".readable");
 
@@ -107,7 +110,7 @@ public class Main {
         // TODO: This
     }
 
-    private static ArrayList<Word> getWords(File f, ArrayList<FeatureType> features) {
+    private static ArrayList<Word> getWords(File f, boolean isTraining) {
         ArrayList<String> lines = new ArrayList<>();
         final String END_OF_SENTENCE = "\\\\END\\\\";
         final String REGEX = "\\s+";
@@ -129,7 +132,7 @@ public class Main {
             System.exit(1);
         }
 
-        // We want to make sure we only have 1 __END__ at the end of the file, rather than two or twenty
+        // We want to make sure we only have 1 __END__ for every new sentence
         for (int i = lines.size() - 2; i >= 0; i--) {
             if (lines.get(i).equals(END_OF_SENTENCE) && lines.get(i + 1).equals(END_OF_SENTENCE)) {
                 lines.remove(i + 1);
@@ -144,36 +147,67 @@ public class Main {
             String[] thisLineSplit = lines.get(i).split(REGEX);
             String[] nextLineSplit;
 
-            Word w;
+            String previousWord;
+            String thisWord;
+            String nextWord;
+
+            String previousPos;
+            String thisPos;
+            String nextPos;
+
+            String label = thisLineSplit[0];
+
+//            Word w;
 
             if (i == 0 || omegaAppeared) {
+                thisWord = thisLineSplit[2];
+                thisPos = thisLineSplit[1];
+
                 nextLineSplit = lines.get(i + 1).split(REGEX);
 
+                previousWord = Word.PHI;
+                previousPos = Word.PHI_POS;
+
                 if (nextLineSplit[0].equals(END_OF_SENTENCE)) {
-                    w = new Word(Word.PHI, thisLineSplit[2], Word.OMEGA, Word.PHI_POS,
-                            thisLineSplit[1], Word.OMEGA_POS, thisLineSplit[0]);
+                    nextWord = Word.OMEGA;
+                    nextPos = Word.OMEGA_POS;
                 } else {
-                    w = new Word(Word.PHI, thisLineSplit[2], nextLineSplit[2], Word.PHI_POS,
-                            thisLineSplit[1], nextLineSplit[1], thisLineSplit[0]);
+                    nextWord = nextLineSplit[2];
+                    nextPos = nextLineSplit[1];
+
                     omegaAppeared = false;
                 }
             } else if (thisLineSplit[0].equals(END_OF_SENTENCE)) {
                 omegaAppeared = true;
                 continue;
             } else {
+                thisWord = thisLineSplit[2];
+                thisPos = thisLineSplit[1];
+
                 previousLineSplit = lines.get(i - 1).split(REGEX);
                 nextLineSplit = lines.get(i + 1).split(REGEX);
 
+                previousWord = previousLineSplit[2];
+                previousPos = previousLineSplit[1];
+
                 if (nextLineSplit[0].equals(END_OF_SENTENCE)) {
-                    w = new Word(previousLineSplit[2], thisLineSplit[2], Word.OMEGA, previousLineSplit[1],
-                            thisLineSplit[1], Word.OMEGA_POS, thisLineSplit[0]);
+                    nextWord = Word.OMEGA;
+                    nextPos = Word.OMEGA_POS;
                 } else {
-                    w = new Word(previousLineSplit[2], thisLineSplit[2], nextLineSplit[2], previousLineSplit[1],
-                            thisLineSplit[1], nextLineSplit[1], thisLineSplit[0]);
+                    nextWord = nextLineSplit[2];
+                    nextPos = nextLineSplit[1];
                 }
             }
 
+            Word w = new Word(previousWord, thisWord, nextWord, previousPos, thisPos, nextPos, label);
             words.add(w);
+        }
+
+        if (isTraining) {
+            for (Word w : words) {
+                trainingWords.add(w.getFeatureString(FeatureType.WORD));
+                trainingPos.add(w.getFeatureString(FeatureType.POS));
+            }
         }
 
         return words;

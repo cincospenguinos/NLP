@@ -15,6 +15,9 @@ public class Word {
     public static final String PHI_POS = "PHIPOS";
     public static final String OMEGA_POS = "OMEGAPOS";
 
+    public static final String UNK_WORD = "UNK";
+    public static final String UNK_POS = "UNKPOS";
+
     private static final Pattern abbreviationPattern = Pattern.compile("[a-zA-Z\\.]*\\.");
 
     private static TreeSet<String> locations;
