@@ -68,7 +68,7 @@ public class Main {
      */
     private static void outputFiles(File f, ArrayList<FeatureType> features, boolean isTraining) {
         ArrayList<Word> words = getWords(f, isTraining);
-        outputReadableFile(f, features, words);
+        outputReadableFile(f, features, words, isTraining);
         outputVectorFile(f, features, words);
     }
 
@@ -78,14 +78,36 @@ public class Main {
      * @param f - File to look at and convert to readable format
      * @param features - Features to consider
      */
-    private static void outputReadableFile(File f, ArrayList<FeatureType> features, ArrayList<Word> words) {
+    private static void outputReadableFile(File f, ArrayList<FeatureType> features, ArrayList<Word> words, boolean isTraining) {
         try {
             PrintWriter out = new PrintWriter(f.getName() + ".readable");
 
             for (Word w : words) {
                 for (FeatureType fType : FeatureType.values()) {
                     if (features.contains(fType)) {
-                        out.println(fType + ": " + w.getFeatureString(fType));
+                        if (isTraining) // Output the usual if we are outputing the training file
+                            out.println(fType + ": " + w.getFeatureString(fType));
+                        else { // Manage UNK if we are outputting the test file
+                            switch(fType) {
+                                case WORD:
+                                    String thisWord = w.getFeatureString(fType);
+                                    if (trainingWords.contains(thisWord))
+                                        out.println(fType + ": " + thisWord);
+                                    else
+                                        out.println(fType + ": " + Word.UNK_WORD);
+                                    break;
+                                case POS:
+                                    String thisPos = w.getFeatureString(fType);
+                                    if (trainingPos.contains(thisPos))
+                                        out.println(fType + ": " + thisPos);
+                                    else
+                                        out.println(fType + ": " + Word.UNK_POS);
+                                    break;
+                                default:
+                                    out.println(fType + ": " + w.getFeatureString(fType));
+                                    break;
+                            }
+                        }
                     } else {
                         out.println(fType + ": n/a" );
                     }
@@ -245,14 +267,14 @@ public class Main {
             if (!isTraining) {
                 if (!trainingWords.contains(previousWord) && !(previousWord.equals(Word.PHI) || previousWord.equals(Word.OMEGA)))
                     previousWord = Word.UNK_WORD;
-                if (!trainingWords.contains(thisWord) && !(thisWord.equals(Word.PHI) || thisWord.equals(Word.OMEGA)))
-                    thisWord = Word.UNK_WORD;
+//                if (!trainingWords.contains(thisWord) && !(thisWord.equals(Word.PHI) || thisWord.equals(Word.OMEGA)))
+//                    thisWord = Word.UNK_WORD;
                 if (!trainingWords.contains(nextWord) && !(nextWord.equals(Word.PHI) || nextWord.equals(Word.OMEGA)))
                     nextWord = Word.UNK_WORD;
                 if (!trainingPos.contains(previousPos) && !(previousPos.equals(Word.PHI_POS) || previousPos.equals(Word.OMEGA_POS)))
                     previousPos = Word.UNK_POS;
-                if (!trainingPos.contains(thisPos) && !(thisPos.equals(Word.PHI_POS) || thisPos.equals(Word.OMEGA_POS)))
-                    thisPos = Word.UNK_POS;
+//                if (!trainingPos.contains(thisPos) && !(thisPos.equals(Word.PHI_POS) || thisPos.equals(Word.OMEGA_POS)))
+//                    thisPos = Word.UNK_POS;
                 if (!trainingPos.contains(nextPos) && !(nextPos.equals(Word.PHI_POS) || nextPos.equals(Word.OMEGA_POS)))
                     nextPos = Word.UNK_POS;
             }
