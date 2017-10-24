@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 import java.util.TreeSet;
 
@@ -11,6 +12,8 @@ public class Main {
 
     private static TreeSet<String> trainingWords;
     private static TreeSet<String> trainingPos;
+    private static final String[] LABEL_IDS = new String[] { "O", "B-PER", "I-PER", "B-LOC", "I-LOC", "B-ORG", "I-ORG" };
+    private static final FeatureType[] FEATURE_IDS = new FeatureType[] { FeatureType.ABBR, FeatureType.CAP, FeatureType.LOCATION };
 
     public static void main(String[] args) {
         if (args.length < 4) {
@@ -97,7 +100,6 @@ public class Main {
             e.printStackTrace();
             System.exit(1);
         }
-        // TODO: This
     }
 
     /**
@@ -107,7 +109,39 @@ public class Main {
      * @param features - Features to consider
      */
     private static void outputVectorFile(File f, ArrayList<FeatureType> features, ArrayList<Word> words) {
-        // TODO: This
+        ArrayList<String> labelIds = new ArrayList<>();
+        ArrayList<Object> featureIds = new ArrayList<>();
+
+        Collections.addAll(labelIds, LABEL_IDS);
+        Collections.addAll(featureIds, FEATURE_IDS);
+        Collections.addAll(featureIds, trainingWords);
+        featureIds.add(Word.PHI);
+        featureIds.add(Word.OMEGA);
+        Collections.addAll(featureIds, trainingPos);
+        featureIds.add(Word.PHI_POS);
+        featureIds.add(Word.OMEGA_POS);
+
+        try {
+            PrintWriter out = new PrintWriter(f.getName() + ".vector");
+
+            for (Word w : words) {
+                // First print out the label
+                out.print(labelIds.indexOf(w.getLabel()) + " ");
+
+                // Now print out the values for each of the feature IDs
+                for (FeatureType fType : features) {
+                    // TODO: Figure out assigning feature IDs
+                }
+
+                out.println();
+            }
+
+            out.flush();
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     private static ArrayList<Word> getWords(File f, boolean isTraining) {
@@ -115,6 +149,7 @@ public class Main {
         final String END_OF_SENTENCE = "\\\\END\\\\";
         final String REGEX = "\\s+";
 
+        // TODO: Check and make sure that you're reading things correctly
         try {
             Scanner s = new Scanner(f);
             while(s.hasNextLine()) {
@@ -139,10 +174,11 @@ public class Main {
             }
         }
 
+        // TODO: I'm missing the very last word in the readable test files. What's the deal?
         ArrayList<Word> words = new ArrayList<>();
         boolean omegaAppeared = false;
 
-        for(int i = 0; i < lines.size() - 1; i++) {
+        for(int i = 0; i < lines.size(); i++) {
             String[] previousLineSplit;
             String[] thisLineSplit = lines.get(i).split(REGEX);
             String[] nextLineSplit;
@@ -183,32 +219,41 @@ public class Main {
                 thisPos = thisLineSplit[1];
 
                 previousLineSplit = lines.get(i - 1).split(REGEX);
-                nextLineSplit = lines.get(i + 1).split(REGEX);
-
                 previousWord = previousLineSplit[2];
                 previousPos = previousLineSplit[1];
 
-                if (nextLineSplit[0].equals(END_OF_SENTENCE)) {
+                if (i + 1 == lines.size()) {
                     nextWord = Word.OMEGA;
                     nextPos = Word.OMEGA_POS;
                 } else {
-                    nextWord = nextLineSplit[2];
-                    nextPos = nextLineSplit[1];
+                    nextLineSplit = lines.get(i + 1).split(REGEX);
+                    if (nextLineSplit[0].equals(END_OF_SENTENCE)) {
+                        nextWord = Word.OMEGA;
+                        nextPos = Word.OMEGA_POS;
+                    } else {
+                        nextWord = nextLineSplit[2];
+                        nextPos = nextLineSplit[1];
+                    }
                 }
             }
 
             // When we print the test file, we need to make sure that all of the words/pos are listed as UNK
             // if they weren't in the training file
-
-            // TODO: Should we worry about thisWord/thisPos?
+            // TODO: This doesn't seem to work for CAP either... assasin is not capitalized, but the trace file expects
+            // it to be even though it needs to be listed as UNK... Hmmmm.....
+            // This is the case for ABBR and LOCATION
             if (!isTraining) {
-                if (!trainingWords.contains(previousWord))
+                if (!trainingWords.contains(previousWord) && !(previousWord.equals(Word.PHI) || previousWord.equals(Word.OMEGA)))
                     previousWord = Word.UNK_WORD;
-                if (!trainingWords.contains(nextWord))
+                if (!trainingWords.contains(thisWord) && !(thisWord.equals(Word.PHI) || thisWord.equals(Word.OMEGA)))
+                    thisWord = Word.UNK_WORD;
+                if (!trainingWords.contains(nextWord) && !(nextWord.equals(Word.PHI) || nextWord.equals(Word.OMEGA)))
                     nextWord = Word.UNK_WORD;
-                if (!trainingPos.contains(previousPos))
+                if (!trainingPos.contains(previousPos) && !(previousPos.equals(Word.PHI_POS) || previousPos.equals(Word.OMEGA_POS)))
                     previousPos = Word.UNK_POS;
-                if (!trainingPos.contains(nextPos))
+                if (!trainingPos.contains(thisPos) && !(thisPos.equals(Word.PHI_POS) || thisPos.equals(Word.OMEGA_POS)))
+                    thisPos = Word.UNK_POS;
+                if (!trainingPos.contains(nextPos) && !(nextPos.equals(Word.PHI_POS) || nextPos.equals(Word.OMEGA_POS)))
                     nextPos = Word.UNK_POS;
             }
 

@@ -85,6 +85,33 @@ public class Word {
         return null;
     }
 
+    /**
+     * Gets the actual feature value associated with the type requested. Could be any number of things
+     *
+     * @param type - the type to get
+     * @return String, String[], boolean, or null.
+     */
+    public Object getFeatureValue(FeatureType type) {
+        switch(type) {
+            case WORD:
+                return word;
+            case WORDCON:
+                return wordCon;
+            case POS:
+                return partOfSpeech;
+            case POSCON:
+                return partOfSpeechCon;
+            case ABBR:
+                return isAbbreviation;
+            case CAP:
+                return isCapitalized;
+            case LOCATION:
+                return isLocation;
+        }
+
+        return null;
+    }
+
     public String toString() {
         return word;
     }
@@ -95,5 +122,9 @@ public class Word {
 
     private boolean isAbbreviation() {
         return abbreviationPattern.matcher(word).matches() && word.length() <= 4;
+    }
+
+    public String getLabel() {
+        return label;
     }
 }

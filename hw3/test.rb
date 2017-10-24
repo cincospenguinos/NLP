@@ -6,22 +6,15 @@ require 'thor'
 
 class Test < Thor
 
-  option :feature
-  option :type
   desc 'Run test', 'Run test against the trace files'
-  def test()
-    feature = 'WORD'
-    feature = options[:feature] if options[:feature]
-
-    type = 'train'
-    type = options[:type] if options[:type]
-
+  def test(feature='WORD', type='train')
     run_test(feature, type)
   end
 
   private
 
   def run_test(feature, type)
+    `ant clean &> /dev/null`
 
     if system('ant >> build.log')
       File.delete('build.log')
@@ -35,7 +28,8 @@ class Test < Thor
       end
 
       `java -jar target/nlp_hw3.jar ner-input-files/train.txt ner-input-files/test.txt ner-input-files/locs.txt #{features}`
-      `diff train.txt.readable "ner-trace-files/#{type}.txt.readable.#{feature}" > diff.txt`
+      `echo 'diff #{type}.txt.readable ner-trace-files/#{type}.txt.readable.#{feature} > diff.txt' > diff.txt`
+      `diff #{type}.txt.readable ner-trace-files/#{type}.txt.readable.#{feature} >> diff.txt`
       if `cat diff.txt | wc -l`.to_i <= 10
         puts `cat diff.txt`
       else

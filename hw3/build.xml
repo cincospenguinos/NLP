@@ -10,6 +10,9 @@
         <delete dir="out"/>
         <delete file="train.txt.readable"/>
         <delete file="test.txt.readable"/>
+        <delete file="train.txt.vector"/>
+        <delete file="test.txt.vector"/>
+        <delete file="diff.txt"/>
     </target>
 
     <target name="compile" depends="clean">
