@@ -1,5 +1,11 @@
 # HW 3
 
-This one looks pretty tricky. From what I understand, we just soak up a bunch of stuff from
-the input files, and then output them into a few other files for the machine learning
-library to interact with. It shouldn't be that big a deal, but it seems tedious.
+Here's how to run my code:
+
+1. Untar my file: `tar -xzvf u0669715_hw3.tar.gz`
+2. `cd hw3`
+3. `ant`
+4. The jar file will be in the `target/` directory.
+
+Feel free to use my ruby script `test.rb` to compare output. It may not actually be very helpful for you.
+It made my job of finishing this assignment a whole lot easier though.
