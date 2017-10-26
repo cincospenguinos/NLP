@@ -1,5 +1,6 @@
 package main.cs5340.alafleur;
 
+import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 

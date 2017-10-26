@@ -13,6 +13,10 @@
         <delete file="train.txt.vector"/>
         <delete file="test.txt.vector"/>
         <delete file="diff.txt"/>
+        <delete file="predict"/>
+        <delete file="train"/>
+        <delete file="predictions.txt.*"/>
+        <delete file="models.txt"/>
     </target>
 
     <target name="compile" depends="clean">

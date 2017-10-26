@@ -3,17 +3,13 @@ package main.cs5340.alafleur;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Scanner;
-import java.util.TreeSet;
+import java.util.*;
 
 public class Main {
 
     private static TreeSet<String> trainingWords;
     private static TreeSet<String> trainingPos;
-    private static final String[] LABEL_IDS = new String[] { "O", "B-PER", "I-PER", "B-LOC", "I-LOC", "B-ORG", "I-ORG" };
-    private static final FeatureType[] FEATURE_IDS = new FeatureType[] { FeatureType.ABBR, FeatureType.CAP, FeatureType.LOCATION };
+    private static FeatureManager featureManager;
 
     public static void main(String[] args) {
         if (args.length < 4) {
@@ -23,6 +19,7 @@ public class Main {
 
         trainingWords = new TreeSet<>();
         trainingPos = new TreeSet<>();
+        featureManager = new FeatureManager();
 
         File trainFile = new File(args[0]);
         File testFile = new File(args[1]);
@@ -128,31 +125,48 @@ public class Main {
      * Prints out a vector file on the file passed.
      *
      * @param f - File to look at and convert to readable format
-     * @param features - Features to consider
+     * @param desiredFeatures - Features to consider
      */
-    private static void outputVectorFile(File f, ArrayList<FeatureType> features, ArrayList<Word> words) {
-        ArrayList<String> labelIds = new ArrayList<>();
-        ArrayList<Object> featureIds = new ArrayList<>();
-
-        Collections.addAll(labelIds, LABEL_IDS);
-        Collections.addAll(featureIds, FEATURE_IDS);
-        Collections.addAll(featureIds, trainingWords);
-        featureIds.add(Word.PHI);
-        featureIds.add(Word.OMEGA);
-        Collections.addAll(featureIds, trainingPos);
-        featureIds.add(Word.PHI_POS);
-        featureIds.add(Word.OMEGA_POS);
-
+    private static void outputVectorFile(File f, ArrayList<FeatureType> desiredFeatures, ArrayList<Word> words) {
         try {
             PrintWriter out = new PrintWriter(f.getName() + ".vector");
 
             for (Word w : words) {
-                // First print out the label
-                out.print(labelIds.indexOf(w.getLabel()) + " ");
+                // Print the label
+                out.print(featureManager.getLabelId(w.getLabel()) + " ");
 
-                // Now print out the values for each of the feature IDs
-                for (FeatureType fType : features) {
-                    // TODO: Figure out assigning feature IDs
+                // Gather the IDs and then print them out in order
+                ArrayList<Integer> featureIds = new ArrayList<>();
+                HashMap<Integer, String> featureStringValues = new HashMap<>();
+
+                for (FeatureType fType : desiredFeatures) {
+                    String featureOutput;
+                    switch (fType) {
+                        case ABBR:
+                        case CAP:
+                        case LOCATION:
+                            if ((boolean) w.getFeatureValue(fType))
+                                featureOutput = featureManager.getFeatureId(fType, w.getFeatureValue(fType)) + ":1 ";
+                            else
+                                featureOutput = featureManager.getFeatureId(fType, w.getFeatureValue(fType)) + ":0 ";
+                            break;
+                        default:
+                            featureOutput = featureManager.getFeatureId(fType, w.getFeatureValue(fType)) + ":1 ";
+                    }
+
+                    featureIds.add(featureManager.getFeatureId(fType, w.getFeatureValue(fType)));
+                    featureStringValues.put(featureManager.getFeatureId(fType, w.getFeatureValue(fType)), featureOutput);
+                }
+
+                featureIds.sort(new Comparator<Integer>() {
+                    @Override
+                    public int compare(Integer o1, Integer o2) {
+                        return o1 - o2;
+                    }
+                });
+
+                for (int id : featureIds) {
+                    out.print(featureStringValues.get(id));
                 }
 
                 out.println();
@@ -166,12 +180,17 @@ public class Main {
         }
     }
 
+    /**
+     * Get all the words from the file passed.
+     * @param f - File to extract words from
+     * @param isTraining - whether or not it's the training file
+     * @return ArrayList of Words
+     */
     private static ArrayList<Word> getWords(File f, boolean isTraining) {
         ArrayList<String> lines = new ArrayList<>();
         final String END_OF_SENTENCE = "\\\\END\\\\";
         final String REGEX = "\\s+";
 
-        // TODO: Check and make sure that you're reading things correctly
         try {
             Scanner s = new Scanner(f);
             while(s.hasNextLine()) {
@@ -196,7 +215,6 @@ public class Main {
             }
         }
 
-        // TODO: I'm missing the very last word in the readable test files. What's the deal?
         ArrayList<Word> words = new ArrayList<>();
         boolean omegaAppeared = false;
 
@@ -261,20 +279,13 @@ public class Main {
 
             // When we print the test file, we need to make sure that all of the words/pos are listed as UNK
             // if they weren't in the training file
-            // TODO: This doesn't seem to work for CAP either... assasin is not capitalized, but the trace file expects
-            // it to be even though it needs to be listed as UNK... Hmmmm.....
-            // This is the case for ABBR and LOCATION
             if (!isTraining) {
                 if (!trainingWords.contains(previousWord) && !(previousWord.equals(Word.PHI) || previousWord.equals(Word.OMEGA)))
                     previousWord = Word.UNK_WORD;
-//                if (!trainingWords.contains(thisWord) && !(thisWord.equals(Word.PHI) || thisWord.equals(Word.OMEGA)))
-//                    thisWord = Word.UNK_WORD;
                 if (!trainingWords.contains(nextWord) && !(nextWord.equals(Word.PHI) || nextWord.equals(Word.OMEGA)))
                     nextWord = Word.UNK_WORD;
                 if (!trainingPos.contains(previousPos) && !(previousPos.equals(Word.PHI_POS) || previousPos.equals(Word.OMEGA_POS)))
                     previousPos = Word.UNK_POS;
-//                if (!trainingPos.contains(thisPos) && !(thisPos.equals(Word.PHI_POS) || thisPos.equals(Word.OMEGA_POS)))
-//                    thisPos = Word.UNK_POS;
                 if (!trainingPos.contains(nextPos) && !(nextPos.equals(Word.PHI_POS) || nextPos.equals(Word.OMEGA_POS)))
                     nextPos = Word.UNK_POS;
             }
