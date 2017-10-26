@@ -9,3 +9,5 @@ Here's how to run my code:
 
 Feel free to use my ruby script `test.rb` to compare output. It may not actually be very helpful for you.
 It made my job of finishing this assignment a whole lot easier though.
+
+All of the traces that you wish to see are included in the `traces/` directory.
